@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Endless Clickomania</title>
     <style>
@@ -42,8 +43,9 @@
         <canvas id="gameCanvas" width="400" height="400"></canvas><br>
     </div>
     <button onclick="startGame()">Restart</button>
-    <audio id="clickSound" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YUgAAAAA////f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/"></audio>
-    <script>    
+    <audio id="clickSound"
+        src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YUgAAAAA////f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/"></audio>
+    <script>
         const rows = 10, cols = 10;
         let blockSize = 40;
         const colors = ['red', 'green', 'blue', 'yellow', 'purple'];
