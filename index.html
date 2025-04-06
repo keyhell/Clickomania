@@ -36,7 +36,7 @@
 <body>
     <h1>Endless Clickomania</h1>
     <div id="lastClickInfo">Last blocks: 0 | Best blocks: 0 | Total blocks: 0</div>
-    <canvas id="gameCanvas" width="398" height="398"></canvas><br>
+    <canvas id="gameCanvas" width="400" height="400"></canvas><br>
     <button onclick="startGame()">Restart</button>
     <audio id="clickSound"
         src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQgAAAAgICAfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f"></audio>
@@ -46,14 +46,12 @@
         const colors = ['red', 'green', 'blue', 'yellow', 'purple'];
         let grid = [];
         const canvas = document.getElementById('gameCanvas');
-        canvas.width = window.innerWidth < 500 ? 300 : 398;
+        canvas.width = Math.min(window.innerWidth * 0.95, 400);
         canvas.height = canvas.width;
         const ctx = canvas.getContext('2d');
         const clickSound = document.getElementById('clickSound');
         const lastClickInfo = document.getElementById('lastClickInfo');
 
-        
-        
         let bestBurned = 0;
         let totalBurned = 0;
 
@@ -62,9 +60,6 @@
             totalBurned += count;
             lastClickInfo.textContent = `Last blocks: ${count} | Best blocks: ${bestBurned} | Total blocks: ${totalBurned}`;
         }
-
-
-
 
         function startGame() {
             grid = [];
@@ -85,7 +80,7 @@
                 for (let c = 0; c < cols; c++) {
                     if (grid[r][c]) {
                         ctx.fillStyle = grid[r][c];
-                        ctx.fillRect(c * blockSize, r * blockSize, blockSize - 2, blockSize - 2);
+                        ctx.fillRect(c * blockSize + 1, r * blockSize + 1, blockSize - 2, blockSize - 2);
                     }
                 }
             }
@@ -156,8 +151,8 @@
                 group.forEach(block => grid[block.r][block.c] = null);
                 collapseAndRefill();
                 updateLastClickInfo(0);
-            blockSize = canvas.width / cols;
-            draw();
+                blockSize = canvas.width / cols;
+                draw();
                 clickSound.currentTime = 0;
                 updateLastClickInfo(group.length);
                 clickSound.play();
