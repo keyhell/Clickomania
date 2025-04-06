@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Endless Clickomania with Sound</title>
     <style>
         body {
@@ -18,6 +19,8 @@
         }
 
         canvas {
+            max-width: 100vw;
+            height: auto;
             border: 2px solid black;
             margin-top: 20px;
         }
@@ -38,10 +41,13 @@
     <audio id="clickSound"
         src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQgAAAAgICAfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f"></audio>
     <script>
-        const rows = 10, cols = 10, blockSize = 40;
+        const rows = 10, cols = 10;
+        let blockSize = 40;
         const colors = ['red', 'green', 'blue', 'yellow', 'purple'];
         let grid = [];
         const canvas = document.getElementById('gameCanvas');
+        canvas.width = window.innerWidth < 500 ? 300 : 398;
+        canvas.height = canvas.width;
         const ctx = canvas.getContext('2d');
         const clickSound = document.getElementById('clickSound');
         const lastClickInfo = document.getElementById('lastClickInfo');
@@ -69,6 +75,7 @@
                 }
             }
             updateLastClickInfo(0);
+            blockSize = canvas.width / cols;
             draw();
         }
 
@@ -133,7 +140,7 @@
             }
         }
 
-        canvas.addEventListener('click', e => {
+        canvas.addEventListener('pointerdown', e => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -149,6 +156,7 @@
                 group.forEach(block => grid[block.r][block.c] = null);
                 collapseAndRefill();
                 updateLastClickInfo(0);
+            blockSize = canvas.width / cols;
             draw();
                 clickSound.currentTime = 0;
                 updateLastClickInfo(group.length);
