@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Endless Clickomania with Sound</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: sans-serif;
+        }
+
+        #lastClickInfo {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #444;
+        }
+
+        canvas {
+            border: 2px solid black;
+            margin-top: 20px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Endless Clickomania</h1>
+    <div id="lastClickInfo">Last blocks: 0 | Best blocks: 0 | Total blocks: 0</div>
+    <canvas id="gameCanvas" width="398" height="398"></canvas><br>
+    <button onclick="startGame()">Restart</button>
+    <audio id="clickSound"
+        src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQgAAAAgICAfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8f"></audio>
+    <script>
+        const rows = 10, cols = 10, blockSize = 40;
+        const colors = ['red', 'green', 'blue', 'yellow', 'purple'];
+        let grid = [];
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const clickSound = document.getElementById('clickSound');
+        const lastClickInfo = document.getElementById('lastClickInfo');
+
+        
+        
+        let bestBurned = 0;
+        let totalBurned = 0;
+
+        function updateLastClickInfo(count) {
+            if (count > bestBurned) bestBurned = count;
+            totalBurned += count;
+            lastClickInfo.textContent = `Last blocks: ${count} | Best blocks: ${bestBurned} | Total blocks: ${totalBurned}`;
+        }
+
+
+
+
+        function startGame() {
+            grid = [];
+            for (let r = 0; r < rows; r++) {
+                grid[r] = [];
+                for (let c = 0; c < cols; c++) {
+                    grid[r][c] = colors[Math.floor(Math.random() * colors.length)];
+                }
+            }
+            updateLastClickInfo(0);
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (grid[r][c]) {
+                        ctx.fillStyle = grid[r][c];
+                        ctx.fillRect(c * blockSize, r * blockSize, blockSize - 2, blockSize - 2);
+                    }
+                }
+            }
+        }
+
+        function floodFill(r, c, targetColor, visited) {
+            if (r < 0 || r >= rows || c < 0 || c >= cols) return [];
+            if (visited[r][c]) return [];
+            if (grid[r][c] !== targetColor) return [];
+            visited[r][c] = true;
+            let group = [{ r, c }];
+            group = group.concat(floodFill(r + 1, c, targetColor, visited));
+            group = group.concat(floodFill(r - 1, c, targetColor, visited));
+            group = group.concat(floodFill(r, c + 1, targetColor, visited));
+            group = group.concat(floodFill(r, c - 1, targetColor, visited));
+            return group;
+        }
+
+        function collapseAndRefill() {
+            // Vertical collapse: pull down non-null cells
+            for (let c = 0; c < cols; c++) {
+                let colBlocks = [];
+                for (let r = 0; r < rows; r++) {
+                    if (grid[r][c]) colBlocks.push(grid[r][c]);
+                }
+                while (colBlocks.length < rows) colBlocks.unshift(null);
+                for (let r = 0; r < rows; r++) {
+                    grid[r][c] = colBlocks[r];
+                }
+            }
+
+            // Horizontal collapse: shift left if entire column is null
+            for (let c = 0; c < cols - 1; c++) {
+                if (grid.every(row => row[c] === null)) {
+                    for (let r = 0; r < rows; r++) {
+                        for (let cc = c; cc < cols - 1; cc++) {
+                            grid[r][cc] = grid[r][cc + 1];
+                        }
+                        grid[r][cols - 1] = null;
+                    }
+                    c--; // recheck this column after shift
+                }
+            }
+
+            // Refill null cells with random colors
+            for (let c = 0; c < cols; c++) {
+                for (let r = 0; r < rows; r++) {
+                    if (!grid[r][c]) {
+                        grid[r][c] = colors[Math.floor(Math.random() * colors.length)];
+                    }
+                }
+            }
+        }
+
+        canvas.addEventListener('click', e => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const c = Math.floor(x / blockSize);
+            const r = Math.floor(y / blockSize);
+            if (r >= rows || c >= cols || !grid[r][c]) return;
+
+            updateLastClickInfo(0);
+
+            let visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+            let group = floodFill(r, c, grid[r][c], visited);
+            if (group.length > 1) {
+                group.forEach(block => grid[block.r][block.c] = null);
+                collapseAndRefill();
+                updateLastClickInfo(0);
+            draw();
+                clickSound.currentTime = 0;
+                updateLastClickInfo(group.length);
+                clickSound.play();
+            }
+        });
+
+        startGame();
+    </script>
+</body>
+
+</html>
