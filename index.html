@@ -46,9 +46,21 @@
         const colors = ['red', 'green', 'blue', 'yellow', 'purple'];
         let grid = [];
         const canvas = document.getElementById('gameCanvas');
+        //const screenSize = Math.min(window.innerWidth, window.innerHeight);
+        //canvas.width = Math.min(screenSize * 0.95, 330);
+        //canvas.height = canvas.width;
+
+        //
+        const maxCanvasSize = 540; // ⬅️ Increase to use more space on wide screens
+        const canvasPadding = 20;  // ⬅️ Margin from screen edge
+
         const screenSize = Math.min(window.innerWidth, window.innerHeight);
-        canvas.width = Math.min(screenSize * 0.95, 330);
+        const availableSize = screenSize - canvasPadding;
+
+        canvas.width = Math.min(availableSize, maxCanvasSize);
         canvas.height = canvas.width;
+        //
+
         const ctx = canvas.getContext('2d');
         const clickSound = document.getElementById('clickSound');
         const lastClickInfo = document.getElementById('lastClickInfo');
@@ -59,7 +71,7 @@
         function updateLastClickInfo(count) {
             if (count > bestBurned) bestBurned = count;
             totalBurned += count;
-            lastClickInfo.textContent = `Last blocks: ${count} | Best blocks: ${bestBurned} | Total blocks: ${totalBurned}`;
+            lastClickInfo.textContent = `Last: ${count} | Best: ${bestBurned} | Total: ${totalBurned}`;
         }
 
         function startGame() {
