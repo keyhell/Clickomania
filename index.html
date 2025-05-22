@@ -43,6 +43,7 @@
         <canvas id="gameCanvas" width="400" height="400"></canvas><br>
     </div>
     <button onclick="startGame()">Restart</button>
+    <button id="soundButton" onclick="toggleSound()">Sound: On</button>
     <audio id="clickSound"
         src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YUgAAAAA////f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/"></audio>
     <script>
@@ -73,6 +74,7 @@
         const clickSound = document.getElementById('clickSound');
         clickSound.volume = 1.0;
         const lastClickInfo = document.getElementById('lastClickInfo');
+        let isSoundEnabled = true;
 
         let bestBurned = 0;
         let totalBurned = 0;
@@ -177,11 +179,21 @@
                 draw();
                 clickSound.currentTime = 0;
                 updateLastClickInfo(group.length);
-                clickSound.play();
+                if (isSoundEnabled) {
+                    clickSound.play();
+                }
             }
         });
 
         startGame();
+
+        function toggleSound() {
+            const clickSound = document.getElementById('clickSound');
+            const soundButton = document.getElementById('soundButton');
+            clickSound.muted = !clickSound.muted;
+            isSoundEnabled = !clickSound.muted; // Update isSoundEnabled
+            soundButton.textContent = clickSound.muted ? "Sound: Off" : "Sound: On";
+        }
     </script>
 </body>
 
