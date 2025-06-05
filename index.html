@@ -167,14 +167,11 @@
             const r = Math.floor(y / blockSize);
             if (r >= rows || c >= cols || !grid[r][c]) return;
 
-            updateLastClickInfo(0);
-
             let visited = Array.from({ length: rows }, () => Array(cols).fill(false));
             let group = floodFill(r, c, grid[r][c], visited);
             if (group.length > 1) {
                 group.forEach(block => grid[block.r][block.c] = null);
                 collapseAndRefill();
-                updateLastClickInfo(0);
                 blockSize = canvas.width / cols;
                 draw();
                 clickSound.currentTime = 0;
