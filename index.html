@@ -50,6 +50,7 @@
         const rows = 10, cols = 10;
         let blockSize = 40;
         const colors = ['red', 'green', 'blue', 'yellow', 'purple'];
+        const blackProbability = 0.05; // chance for a new cell to be a bomb
         let grid = [];
         const canvas = document.getElementById('gameCanvas');
         //const screenSize = Math.min(window.innerWidth, window.innerHeight);
@@ -90,7 +91,11 @@
             for (let r = 0; r < rows; r++) {
                 grid[r] = [];
                 for (let c = 0; c < cols; c++) {
-                    grid[r][c] = colors[Math.floor(Math.random() * colors.length)];
+                    if (Math.random() < blackProbability) {
+                        grid[r][c] = 'black';
+                    } else {
+                        grid[r][c] = colors[Math.floor(Math.random() * colors.length)];
+                    }
                 }
             }
             updateLastClickInfo(0);
@@ -105,6 +110,16 @@
                     if (grid[r][c]) {
                         ctx.fillStyle = grid[r][c];
                         ctx.fillRect(c * blockSize + 1, r * blockSize + 1, blockSize - 2, blockSize - 2);
+                        if (grid[r][c] === 'black') {
+                            ctx.strokeStyle = 'white';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(c * blockSize + 5, r * blockSize + 5);
+                            ctx.lineTo((c + 1) * blockSize - 5, (r + 1) * blockSize - 5);
+                            ctx.moveTo((c + 1) * blockSize - 5, r * blockSize + 5);
+                            ctx.lineTo(c * blockSize + 5, (r + 1) * blockSize - 5);
+                            ctx.stroke();
+                        }
                     }
                 }
             }
@@ -149,11 +164,15 @@
                 }
             }
 
-            // Refill null cells with random colors
+            // Refill null cells with random colors or occasional bombs
             for (let c = 0; c < cols; c++) {
                 for (let r = 0; r < rows; r++) {
                     if (!grid[r][c]) {
-                        grid[r][c] = colors[Math.floor(Math.random() * colors.length)];
+                        if (Math.random() < blackProbability) {
+                            grid[r][c] = 'black';
+                        } else {
+                            grid[r][c] = colors[Math.floor(Math.random() * colors.length)];
+                        }
                     }
                 }
             }
@@ -167,17 +186,43 @@
             const r = Math.floor(y / blockSize);
             if (r >= rows || c >= cols || !grid[r][c]) return;
 
-            let visited = Array.from({ length: rows }, () => Array(cols).fill(false));
-            let group = floodFill(r, c, grid[r][c], visited);
-            if (group.length > 1) {
-                group.forEach(block => grid[block.r][block.c] = null);
+            if (grid[r][c] === 'black') {
+                let removed = 0;
+                for (let cc = 0; cc < cols; cc++) {
+                    if (grid[r][cc]) {
+                        grid[r][cc] = null;
+                        removed++;
+                    }
+                }
+                for (let rr = 0; rr < rows; rr++) {
+                    if (grid[rr][c]) {
+                        if (rr !== r) {
+                            grid[rr][c] = null;
+                            removed++;
+                        }
+                    }
+                }
                 collapseAndRefill();
                 blockSize = canvas.width / cols;
                 draw();
                 clickSound.currentTime = 0;
-                updateLastClickInfo(group.length);
+                updateLastClickInfo(removed);
                 if (isSoundEnabled) {
                     clickSound.play();
+                }
+            } else {
+                let visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+                let group = floodFill(r, c, grid[r][c], visited);
+                if (group.length > 1) {
+                    group.forEach(block => grid[block.r][block.c] = null);
+                    collapseAndRefill();
+                    blockSize = canvas.width / cols;
+                    draw();
+                    clickSound.currentTime = 0;
+                    updateLastClickInfo(group.length);
+                    if (isSoundEnabled) {
+                        clickSound.play();
+                    }
                 }
             }
         });
