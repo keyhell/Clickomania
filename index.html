@@ -50,7 +50,8 @@
         const rows = 10, cols = 10;
         let blockSize = 40;
         const colors = ['red', 'green', 'blue', 'yellow', 'purple'];
-        const blackProbability = 0.05; // chance for a new cell to be a bomb
+        const blackProbability = 0.02; // chance for a new cell to be a bomb
+        const bombRadius = 1; // radius around a bomb to clear
         let grid = [];
         const canvas = document.getElementById('gameCanvas');
         //const screenSize = Math.min(window.innerWidth, window.innerHeight);
@@ -238,16 +239,12 @@
             if (grid[r][c] === 'black') {
                 let removed = 0;
                 let blocks = [];
-                for (let cc = 0; cc < cols; cc++) {
-                    if (grid[r][cc]) {
-                        blocks.push({ r, c: cc });
-                        removed++;
-                    }
-                }
-                for (let rr = 0; rr < rows; rr++) {
-                    if (grid[rr][c]) {
-                        if (rr !== r) {
-                            blocks.push({ r: rr, c });
+                for (let rr = r - bombRadius; rr <= r + bombRadius; rr++) {
+                    if (rr < 0 || rr >= rows) continue;
+                    for (let cc = c - bombRadius; cc <= c + bombRadius; cc++) {
+                        if (cc < 0 || cc >= cols) continue;
+                        if (grid[rr][cc]) {
+                            blocks.push({ r: rr, c: cc });
                             removed++;
                         }
                     }
