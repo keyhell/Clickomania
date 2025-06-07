@@ -76,6 +76,7 @@
         clickSound.volume = 1.0;
         const lastClickInfo = document.getElementById('lastClickInfo');
         let isSoundEnabled = true;
+        let isAnimating = false;
 
         let bestBurned = 0;
         let totalBurned = 0;
@@ -88,6 +89,7 @@
 
         function startGame() {
             grid = [];
+            isAnimating = false;
             for (let r = 0; r < rows; r++) {
                 grid[r] = [];
                 for (let c = 0; c < cols; c++) {
@@ -178,7 +180,54 @@
             }
         }
 
+        function animateBlockRemoval(blocks, onComplete) {
+            isAnimating = true;
+            const captured = blocks.map(b => ({ ...b, color: grid[b.r][b.c] }));
+            captured.forEach(b => grid[b.r][b.c] = null);
+            const duration = 250;
+            const start = performance.now();
+
+            function frame(now) {
+                const t = Math.min(1, (now - start) / duration);
+                draw();
+                ctx.save();
+                captured.forEach(b => {
+                    const scale = 1 - t;
+                    const x = b.c * blockSize + blockSize / 2;
+                    const y = b.r * blockSize + blockSize / 2;
+                    ctx.translate(x, y);
+                    ctx.scale(scale, scale);
+                    ctx.fillStyle = b.color;
+                    ctx.fillRect(-blockSize / 2 + 1, -blockSize / 2 + 1, blockSize - 2, blockSize - 2);
+                    if (b.color === 'black') {
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 2;
+                        const o = blockSize / 2 - 5;
+                        ctx.beginPath();
+                        ctx.moveTo(-o, -o);
+                        ctx.lineTo(o, o);
+                        ctx.moveTo(o, -o);
+                        ctx.lineTo(-o, o);
+                        ctx.stroke();
+                    }
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                });
+                ctx.restore();
+                if (t < 1) {
+                    requestAnimationFrame(frame);
+                } else {
+                    collapseAndRefill();
+                    blockSize = canvas.width / cols;
+                    draw();
+                    isAnimating = false;
+                    if (onComplete) onComplete();
+                }
+            }
+            requestAnimationFrame(frame);
+        }
+
         canvas.addEventListener('pointerdown', e => {
+            if (isAnimating) return;
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -188,41 +237,39 @@
 
             if (grid[r][c] === 'black') {
                 let removed = 0;
+                let blocks = [];
                 for (let cc = 0; cc < cols; cc++) {
                     if (grid[r][cc]) {
-                        grid[r][cc] = null;
+                        blocks.push({ r, c: cc });
                         removed++;
                     }
                 }
                 for (let rr = 0; rr < rows; rr++) {
                     if (grid[rr][c]) {
                         if (rr !== r) {
-                            grid[rr][c] = null;
+                            blocks.push({ r: rr, c });
                             removed++;
                         }
                     }
                 }
-                collapseAndRefill();
-                blockSize = canvas.width / cols;
-                draw();
-                clickSound.currentTime = 0;
-                updateLastClickInfo(removed);
-                if (isSoundEnabled) {
-                    clickSound.play();
-                }
+                animateBlockRemoval(blocks, () => {
+                    clickSound.currentTime = 0;
+                    updateLastClickInfo(removed);
+                    if (isSoundEnabled) {
+                        clickSound.play();
+                    }
+                });
             } else {
                 let visited = Array.from({ length: rows }, () => Array(cols).fill(false));
                 let group = floodFill(r, c, grid[r][c], visited);
                 if (group.length > 1) {
-                    group.forEach(block => grid[block.r][block.c] = null);
-                    collapseAndRefill();
-                    blockSize = canvas.width / cols;
-                    draw();
-                    clickSound.currentTime = 0;
-                    updateLastClickInfo(group.length);
-                    if (isSoundEnabled) {
-                        clickSound.play();
-                    }
+                    animateBlockRemoval(group, () => {
+                        clickSound.currentTime = 0;
+                        updateLastClickInfo(group.length);
+                        if (isSoundEnabled) {
+                            clickSound.play();
+                        }
+                    });
                 }
             }
         });
